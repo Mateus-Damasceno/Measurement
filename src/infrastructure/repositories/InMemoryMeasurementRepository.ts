@@ -18,4 +18,15 @@ export class InMemoryMeasurementRepository implements MeasurementRepository {
             m.measureDatetime.getFullYear() === year
         ) || null;
     }
+
+    async findByUuid(measureUuid: string): Promise<Measurement | null> {
+        return this.measurements.find(m => m.measureUuid === measureUuid) || null;
+    }
+
+    async findByCustomerCodeAndType(customerCode: string, measureType?: 'WATER' | 'GAS'): Promise<Measurement[]> {
+        return this.measurements.filter(m =>
+            m.customerCode === customerCode &&
+            (!measureType || m.measureType === measureType)
+        );
+    }
 }

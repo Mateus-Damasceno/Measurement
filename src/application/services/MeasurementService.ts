@@ -29,6 +29,7 @@ export class MeasurementService {
         const measureValue = this.extractMeasureValue(textAnnotations);
         const imageUrl = await this.generateUrl(image);
         const measureUuid = uuidv4();
+        const confirmed = false;
         const measurement = new Measurement(
             image,
             customerCode,
@@ -36,7 +37,8 @@ export class MeasurementService {
             measureType,
             imageUrl,
             measureValue,
-            measureUuid
+            measureUuid,
+            confirmed
         );
 
         await this.measurementRepository.save(measurement);
@@ -69,7 +71,7 @@ export class MeasurementService {
         const uniqueId = uuidv4();
         const imageBuffer = Buffer.from(base64Image, 'base64');
         const fileName = `${uniqueId}.jpg`;
-        const imagesDir = path.join(__dirname, 'images',fileName);
+        const imagesDir = path.join(__dirname, '..','..','images',fileName);
         // Cria a pasta 'images' se ela não existir
         if (!fs.existsSync(imagesDir)) {
             await fs.promises.mkdir(imagesDir, { recursive: true });
@@ -79,5 +81,31 @@ export class MeasurementService {
         await fs.promises.writeFile(filePath, imageBuffer);
 
         return `http://localhost:${this.port}/images/${fileName}`;
+    }
+
+    async confirmMeasurement(measureUuid: string, confirmedValue: number): Promise<void> {
+        const measurement = await this.measurementRepository.findByUuid(measureUuid);
+        if (!measurement) {
+            throw new Error('Measurement not found');
+        }
+        if (measurement.confirmed) {
+            throw new Error('Measurement already confirmed');
+        }
+        measurement.measureValue = confirmedValue;
+        measurement.confirmed = true;
+        await this.measurementRepository.save(measurement);
+    }
+
+    async listMeasurements(customerCode: string, measureType?: string): Promise<Measurement[]> {
+        const validMeasureType = this.validateAndConvertMeasureType(measureType);
+        return this.measurementRepository.findByCustomerCodeAndType(customerCode, validMeasureType);
+    }
+    private validateAndConvertMeasureType(measureType?: string): 'WATER' | 'GAS' | undefined {
+        if (!measureType) return undefined;
+        const upperCaseType = measureType.toUpperCase();
+        if (upperCaseType === 'WATER' || upperCaseType === 'GAS') {
+            return upperCaseType as 'WATER' | 'GAS';
+        }
+        throw new Error('Invalid measure type');
     }
 }

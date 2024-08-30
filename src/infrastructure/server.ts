@@ -14,6 +14,8 @@ const measurementService = new MeasurementService(measurementRepository, geminiS
 const measurementController = new MeasurementController(measurementService);
 
 app.post('/upload', (req, res) => measurementController.uploadMeasurement(req, res));
+app.patch('/confirm', (req, res) => measurementController.confirmMeasurement(req, res));
+app.get('/:customer_code/list', (req, res) => measurementController.listMeasurements(req, res));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
