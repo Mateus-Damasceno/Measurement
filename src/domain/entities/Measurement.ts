@@ -6,6 +6,7 @@ export class Measurement {
         public measureType: 'WATER' | 'GAS',
         public imageUrl: string,
         public measureValue: number,
-        public measureUuid: string
+        public measureUuid: string,
+        public confirmed:boolean
     ) {}
 }
